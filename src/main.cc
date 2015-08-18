@@ -97,23 +97,14 @@ int InitResources(void) {
     return 0;
   }
 
-  GLfloat triangle_vertices[] = {
-    0.0,  0.8,
-    -0.8, -0.8,
-    0.8, -0.8,
+  GLfloat triangle_attributes[] = {
+     0.0,  0.8,   1.0, 1.0, 0.0,
+    -0.8, -0.8,   0.0, 0.0, 1.0,
+     0.8, -0.8,   1.0, 0.0, 0.0,
   };
   glGenBuffers(1, &vbo_triangle);
   glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
-
-  GLfloat triangle_colors[] = {
-    1.0, 1.0, 0.0,
-    0.0, 0.0, 1.0,
-    1.0, 0.0, 0.0,
-  };
-  glGenBuffers(1, &vbo_triangle_colors);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle_colors);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_colors), triangle_colors, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_attributes), triangle_attributes, GL_STATIC_DRAW);
 
   attribute_name = "v_color";
   attribute_v_color = glGetAttribLocation(program, attribute_name);
@@ -143,24 +134,22 @@ void OnDisplay() {
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle);
   glEnableVertexAttribArray(attribute_coord2d);
+  glEnableVertexAttribArray(attribute_v_color);
   glVertexAttribPointer(
     attribute_coord2d,
     2,
     GL_FLOAT,
     GL_FALSE,
-    0,
+    5 * sizeof(GLfloat),
     0);
 
-  glEnableVertexAttribArray(attribute_v_color);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle_colors);
   glVertexAttribPointer(
-    attribute_v_color, // attribute
-    3,                 // number of elements per vertex, here (r,g,b)
-    GL_FLOAT,          // the type of each element
-    GL_FALSE,          // take our values as-is
-    0,                 // no extra data between each position
-    0                  // offset of first element
-  );
+    attribute_v_color,
+    3,
+    GL_FLOAT,
+    GL_FALSE,
+    5 * sizeof(GLfloat),
+    (GLvoid*) (2 * sizeof(GLfloat)));
 
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glDisableVertexAttribArray(attribute_coord2d);
