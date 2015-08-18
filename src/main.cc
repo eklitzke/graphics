@@ -13,7 +13,7 @@
 
 GLuint program, vbo_triangle, vbo_triangle_colors;
 GLint attribute_coord3d, attribute_v_color;
-GLint uniform_fade;
+GLint uniform_m_transform;
 
 struct attributes {
   GLfloat coord3d[3];
@@ -123,9 +123,9 @@ int InitResources(void) {
     return 0;
   }
 
-  const char* uniform_name = "fade";
-  uniform_fade = glGetUniformLocation(program, uniform_name);
-  if (uniform_fade == -1) {
+  const char* uniform_name = "m_transform";
+  uniform_m_transform = glGetUniformLocation(program, uniform_name);
+  if (uniform_m_transform == -1) {
     fprintf(stderr, "Could not bind uniform %s\n", uniform_name);
     return 0;
   }
@@ -174,9 +174,15 @@ void FreeResources() {
 }
 
 void Idle() {
-  float cur_fade = sinf(glutGet(GLUT_ELAPSED_TIME) / 1000.0 * (2*M_PI) / 5) / 2 + 0.5; // 0->1->0 every 5 seconds
+  float move = sinf(glutGet(GLUT_ELAPSED_TIME) / 1000.0 * (2*3.14) / 5); // -1<->+1 every 5 seconds
+  float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 45;  // 45° per second
+  glm::vec3 axis_z(0, 0, 1);
+  glm::mat4 m_transform = glm::translate(glm::mat4(1.0f), glm::vec3(move, 0.0, 0.0))
+    * glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis_z);
+
+  glUniformMatrix4fv(uniform_m_transform, 1, GL_FALSE, glm::value_ptr(m_transform));
+
   glUseProgram(program);
-  glUniform1f(uniform_fade, cur_fade);
   glutPostRedisplay();
 }
 
