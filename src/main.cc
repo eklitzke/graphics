@@ -7,12 +7,16 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 GLuint program, vbo_triangle, vbo_triangle_colors;
-GLint attribute_coord2d, attribute_v_color;
+GLint attribute_coord3d, attribute_v_color;
 GLint uniform_fade;
 
 struct attributes {
-  GLfloat coord2d[2];
+  GLfloat coord3d[3];
   GLfloat v_color[3];
 };
 
@@ -95,17 +99,17 @@ int InitResources(void) {
     return 0;
   }
 
-  const char *attribute_name = "coord2d";
-  attribute_coord2d = glGetAttribLocation(program, attribute_name);
-  if (attribute_coord2d == -1) {
+  const char *attribute_name = "coord3d";
+  attribute_coord3d = glGetAttribLocation(program, attribute_name);
+  if (attribute_coord3d == -1) {
     std::cerr << "could not bind attribute: " << attribute_name << "\n";
     return 0;
   }
 
   struct attributes triangle_attributes[] = {
-    {{ 0.0,  0.8}, {1.0, 1.0, 0.0}},
-    {{-0.8, -0.8}, {0.0, 0.0, 1.0}},
-    {{ 0.8, -0.8}, {1.0, 0.0, 0.0}},
+    {{ 0.0,  0.8, 0.0}, {1.0, 1.0, 0.0}},
+    {{-0.8, -0.8, 0.0}, {0.0, 0.0, 1.0}},
+    {{ 0.8, -0.8, 0.0}, {1.0, 0.0, 0.0}},
   };
 
   glGenBuffers(1, &vbo_triangle);
@@ -139,11 +143,11 @@ void OnDisplay() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle);
-  glEnableVertexAttribArray(attribute_coord2d);
+  glEnableVertexAttribArray(attribute_coord3d);
   glEnableVertexAttribArray(attribute_v_color);
   glVertexAttribPointer(
-    attribute_coord2d,
-    2,
+    attribute_coord3d,
+    3,
     GL_FLOAT,
     GL_FALSE,
     sizeof(struct attributes),
@@ -158,7 +162,7 @@ void OnDisplay() {
     (GLvoid*) offsetof(struct attributes, v_color));
 
   glDrawArrays(GL_TRIANGLES, 0, 3);
-  glDisableVertexAttribArray(attribute_coord2d);
+  glDisableVertexAttribArray(attribute_coord3d);
   glDisableVertexAttribArray(attribute_v_color);
 
   glutSwapBuffers();
