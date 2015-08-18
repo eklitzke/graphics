@@ -1,5 +1,4 @@
-attribute vec2 coord2d;
-attribute vec3 v_color;
+attribute vec3 coor32d;
 varying vec3 f_color;
 
 void main(void) {
