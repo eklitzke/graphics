@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -6,8 +7,9 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-GLuint program, vbo_triangle;
-GLint attribute_coord2d;
+GLuint program, vbo_triangle, vbo_triangle_colors;
+GLint attribute_coord2d, attribute_v_color;
+GLint uniform_fade;
 
 std::string ReadFile(const std::string &filename) {
   std::ifstream f(filename);
@@ -67,7 +69,7 @@ GLuint CreateShader(const std::string &filename, GLenum type) {
   return res;
 }
 
-int init_resources(void) {
+int InitResources(void) {
   GLuint vs, fs;
   if ((vs = CreateShader("src/triangle.v.glsl", GL_VERTEX_SHADER)) == 0) {
     return 0;
@@ -104,6 +106,29 @@ int init_resources(void) {
   glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle);
   glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
 
+  GLfloat triangle_colors[] = {
+    1.0, 1.0, 0.0,
+    0.0, 0.0, 1.0,
+    1.0, 0.0, 0.0,
+  };
+  glGenBuffers(1, &vbo_triangle_colors);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle_colors);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_colors), triangle_colors, GL_STATIC_DRAW);
+
+  attribute_name = "v_color";
+  attribute_v_color = glGetAttribLocation(program, attribute_name);
+  if (attribute_v_color == -1) {
+    fprintf(stderr, "Could not bind attribute %s\n", attribute_name);
+    return 0;
+  }
+
+  const char* uniform_name = "fade";
+  uniform_fade = glGetUniformLocation(program, uniform_name);
+  if (uniform_fade == -1) {
+    fprintf(stderr, "Could not bind uniform %s\n", uniform_name);
+    return 0;
+  }
+
   return 1;
 }
 
@@ -126,8 +151,20 @@ void onDisplay() {
     0,
     0);
 
+  glEnableVertexAttribArray(attribute_v_color);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle_colors);
+  glVertexAttribPointer(
+    attribute_v_color, // attribute
+    3,                 // number of elements per vertex, here (r,g,b)
+    GL_FLOAT,          // the type of each element
+    GL_FALSE,          // take our values as-is
+    0,                 // no extra data between each position
+    0                  // offset of first element
+  );
+
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glDisableVertexAttribArray(attribute_coord2d);
+  glDisableVertexAttribArray(attribute_v_color);
 
   glutSwapBuffers();
 }
@@ -137,12 +174,20 @@ void free_resources() {
   glDeleteBuffers(1, &vbo_triangle);
 }
 
+void Idle() {
+  float cur_fade = sinf(glutGet(GLUT_ELAPSED_TIME) / 1000.0 * (2*M_PI) / 5) / 2 + 0.5; // 0->1->0 every 5 seconds
+  glUseProgram(program);
+  glUniform1f(uniform_fade, cur_fade);
+  glutPostRedisplay();
+}
+
 int main(int argc, char **argv) {
   glutInit(&argc, argv);
   glutInitContextVersion(2, 0);
   glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(640, 480);
   glutCreateWindow("hello world");
+  glutIdleFunc(Idle);
 
   GLenum glew_status = glewInit();
   if (glew_status != GLEW_OK) {
@@ -155,7 +200,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (init_resources()) {
+  if (InitResources()) {
     glutDisplayFunc(onDisplay);
     glutMainLoop();
   }
