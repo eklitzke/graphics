@@ -132,7 +132,7 @@ int InitResources(void) {
   return 1;
 }
 
-void onDisplay() {
+void OnDisplay() {
   glClearColor(1.0, 1.0, 1.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -169,7 +169,7 @@ void onDisplay() {
   glutSwapBuffers();
 }
 
-void free_resources() {
+void FreeResources() {
   glDeleteProgram(program);
   glDeleteBuffers(1, &vbo_triangle);
 }
@@ -201,10 +201,10 @@ int main(int argc, char **argv) {
   }
 
   if (InitResources()) {
-    glutDisplayFunc(onDisplay);
+    glutDisplayFunc(OnDisplay);
     glutMainLoop();
   }
 
-  free_resources();
+  FreeResources();
   return 0;
 }
