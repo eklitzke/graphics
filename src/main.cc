@@ -11,6 +11,11 @@ GLuint program, vbo_triangle, vbo_triangle_colors;
 GLint attribute_coord2d, attribute_v_color;
 GLint uniform_fade;
 
+struct attributes {
+  GLfloat coord2d[2];
+  GLfloat v_color[3];
+};
+
 std::string ReadFile(const std::string &filename) {
   std::ifstream f(filename);
   return std::string(std::istreambuf_iterator<char>(f),
@@ -97,11 +102,12 @@ int InitResources(void) {
     return 0;
   }
 
-  GLfloat triangle_attributes[] = {
-     0.0,  0.8,   1.0, 1.0, 0.0,
-    -0.8, -0.8,   0.0, 0.0, 1.0,
-     0.8, -0.8,   1.0, 0.0, 0.0,
+  struct attributes triangle_attributes[] = {
+    {{ 0.0,  0.8}, {1.0, 1.0, 0.0}},
+    {{-0.8, -0.8}, {0.0, 0.0, 1.0}},
+    {{ 0.8, -0.8}, {1.0, 0.0, 0.0}},
   };
+
   glGenBuffers(1, &vbo_triangle);
   glBindBuffer(GL_ARRAY_BUFFER, vbo_triangle);
   glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_attributes), triangle_attributes, GL_STATIC_DRAW);
@@ -140,7 +146,7 @@ void OnDisplay() {
     2,
     GL_FLOAT,
     GL_FALSE,
-    5 * sizeof(GLfloat),
+    sizeof(struct attributes),
     0);
 
   glVertexAttribPointer(
@@ -148,8 +154,8 @@ void OnDisplay() {
     3,
     GL_FLOAT,
     GL_FALSE,
-    5 * sizeof(GLfloat),
-    (GLvoid*) (2 * sizeof(GLfloat)));
+    sizeof(struct attributes),
+    (GLvoid*) offsetof(struct attributes, v_color));
 
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glDisableVertexAttribArray(attribute_coord2d);
